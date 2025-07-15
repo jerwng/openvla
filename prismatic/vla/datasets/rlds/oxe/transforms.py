@@ -840,6 +840,14 @@ def libero_dataset_transform(trajectory: Dict[str, Any]) -> Dict[str, Any]:
     trajectory["observation"]["gripper_state"] = trajectory["observation"]["state"][:, -2:]  # 2D gripper state
     return trajectory
 
+def humanoid_mimic_walk_dataset_transform(trajectory: dict) -> dict:
+    """
+    Standardizes humanoid_mimic_walk trajectories.
+    Assumes each step has keys: 'image', 'obs', 'action', 'language_instruction'.
+    """
+    # If your data is already in the correct format, you may just need to pass it through:
+    return trajectory
+
 
 # === Registry ===
 OXE_STANDARDIZATION_TRANSFORMS = {

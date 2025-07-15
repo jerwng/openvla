@@ -49,9 +49,14 @@ from prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
 from prismatic.extern.hf.modeling_prismatic import OpenVLAForActionPrediction
 from prismatic.extern.hf.processing_prismatic import PrismaticImageProcessor, PrismaticProcessor
 
+import os
+
+os.environ['TFDS_DATASETS'] = '~/openvla/rlds_dataset_builder'
+
 # Sane Defaults
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+import humanoid_mimic_walk.humanoid_mimic_walk_dataset_builder
 
 # # === Utilities ===
 # # fmt: off

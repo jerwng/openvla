@@ -35,9 +35,14 @@ from prismatic.util import set_global_seed
 from prismatic.vla import get_vla_dataset_and_collator
 from prismatic.vla.datasets.rlds.utils.data_utils import save_dataset_statistics
 
+import os
+
+os.environ['TFDS_DATASETS'] = '~/openvla/rlds_dataset_builder'
+
 # Sane Defaults
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+import humanoid_mimic_walk.humanoid_mimic_walk_dataset_builder # TODO: Fix this path
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)
