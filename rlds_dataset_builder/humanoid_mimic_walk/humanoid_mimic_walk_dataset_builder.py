@@ -43,13 +43,13 @@ class HumanoidMimicWalk(tfds.core.GeneratorBasedBuilder):
                         #         '2x gripper position, 1x door opening angle].',
                         # )
                         'obs': tfds.features.Tensor(
-                            shape=(434,),
+                            shape=(1,434),
                             dtype=np.float32,
                             doc='Robot state.',
                         ),
                     }),
                     'action': tfds.features.Tensor(
-                        shape=(19,),
+                        shape=(1,19),
                         dtype=np.float32,
                         doc='Robot action, consists of [7x joint velocities, '
                             '2x gripper velocities, 1x terminate episode].',
