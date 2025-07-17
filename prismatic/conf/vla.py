@@ -197,6 +197,19 @@ class Exp_SigLIP_224px_Droid_Wipe(Exp_SigLIP_224px_Bridge):
 
     data_mix: str = "droid_wipe"
 
+# === [8 GPU] SigLIP 224px + Humanoid Mimic Walk ===
+@dataclass
+class Exp_DinoSigLIP_224px_Humanoid_Mimic_Walk(Exp_SigLIP_224px_Bridge):
+    vla_id: str = "prism-dinosiglip-224px+humanoid_mimic_walk"
+    base_vlm: Union[str, Path] = "prism-dinosiglip-224px+7b"
+
+    data_mix: str = "humanoid_mimic_walk"
+
+    # Temporary
+    expected_world_size: int = 4
+    global_batch_size: int = 128
+    per_device_batch_size: int = 32
+
 
 # === Define a VLA Registry Enum for Reference & Validation ===
 @unique
@@ -224,6 +237,9 @@ class VLARegistry(Enum):
 
     # === DROID Fine-tuning Configs ===
     SIGLIP_224PX_MX_DROID_WIPE = Exp_SigLIP_224px_Droid_Wipe
+
+    # === Humanoid Mimic Walk ===
+    DINOSIGLIP_224PX_MX_HUMANOID_MIMIC_WALK = Exp_DinoSigLIP_224px_Humanoid_Mimic_Walk
 
     @property
     def vla_id(self) -> str:
