@@ -40,11 +40,12 @@ class RLDSBatchTransform:
         dataset_name, action = rlds_batch["dataset_name"], rlds_batch["action"][0]
         img = Image.fromarray(rlds_batch["observation"]["image_primary"][0])
         lang = rlds_batch["task"]["language_instruction"].decode().lower()
+        obs = np.squeeze(rlds_batch['observation']['proprio'])
 
         # Construct Chat-based Prompt =>> Input is default query + language instruction, output are the action tokens
         prompt_builder = self.prompt_builder_fn("openvla")
         conversation = [
-            {"from": "human", "value": f"What action should the robot take to {lang}?"},
+            {"from": "human", "value": f"What action should the robot take to {lang}, given robot proprioception {obs}?"},
             {"from": "gpt", "value": self.action_tokenizer(action)},
         ]
         for turn in conversation:
@@ -94,7 +95,7 @@ class RLDSDataset(IterableDataset):
             mixture_spec,
             load_camera_views=("primary",),
             load_depth=False,
-            load_proprio=False,
+            load_proprio=True,
             load_language=True,
             action_proprio_normalization_type=NormalizationType.BOUNDS_Q99,
         )

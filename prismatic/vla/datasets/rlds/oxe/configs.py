@@ -675,7 +675,7 @@ OXE_DATASET_CONFIGS = {
     "humanoid_mimic_walk": {
         "image_obs_keys": {"primary": "image", "secondary": None, "wrist": None},
         "depth_obs_keys": {"primary": None, "secondary": None, "wrist": None},
-        "state_obs_keys": {"primary": "obs", "secondary": None, "wrist": None},
+        "state_obs_keys": ["obs"],
         "state_encoding": StateEncoding.HUMANOID_JOINT,  
         "action_encoding": ActionEncoding.HUMANOID_JOINT_DC,  
     },
