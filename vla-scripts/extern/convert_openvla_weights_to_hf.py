@@ -44,7 +44,9 @@ class HFConvertConfig:
     output_hf_model_local_path: Path = Path(                            # Path to Local Path to save HF model
         "hf-convert/openvla-7b"
     )
-    output_hf_model_hub_path: str = "openvla/openvla-7b"                # (Optional) Path to HF Hub Path to push
+    output_hf_model_hub_path: str = "openvla/openvla-7b"   
+    
+    openvla_model_name: str = None             # (Optional) Path to HF Hub Path to push
                                                                         # model to
 
     # HF Hub Credentials (required for Gated Models like LLaMa-2)
@@ -120,10 +122,12 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
     print(f"[*] Converting OpenVLA Model `{cfg.openvla_model_path_or_id}` to HF Transformers Format")
     torch.set_default_dtype(torch.bfloat16)
 
+    model_name = "latest-checkpoint.pt" if cfg.openvla_model_name is None else cfg.openvla_model_name
+
     # Get `config.json`, 'dataset_statistics.json' and `checkpoint_pt` -- mirrors logic in `prismatic.models.load.py`
     if os.path.isdir(cfg.openvla_model_path_or_id):
         print(f"[*] Loading from Local Path `{(run_dir := Path(cfg.openvla_model_path_or_id))}`")
-        config_json, checkpoint_pt = run_dir / "config.json", run_dir / "checkpoints" / "latest-checkpoint.pt"
+        config_json, checkpoint_pt = run_dir / "config.json", run_dir / "checkpoints" / model_name
         dataset_statistics_json = run_dir / "dataset_statistics.json"
 
         assert config_json.exists(), f"Missing `config.json` for `{run_dir = }`"
@@ -133,7 +137,7 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
         print(f"[*] Downloading Prismatic Checkpoint from HF Hub :: `TRI-ML/{cfg.openvla_model_path_or_id}`")
         config_json = hf_hub_download("openvla/openvla-dev", f"{cfg.openvla_model_path_or_id}/config.json")
         checkpoint_pt = hf_hub_download(
-            "openvla/openvla-dev", f"{cfg.openvla_model_path_or_id}/checkpoints/latest-checkpoint.pt"
+            "openvla/openvla-dev", f"{cfg.openvla_model_path_or_id}/checkpoints/{model_name}"
         )
         dataset_statistics_json = hf_hub_download(
             "openvla/openvla-dev", f"{cfg.openvla_model_path_or_id}/dataset_statistics.json"
