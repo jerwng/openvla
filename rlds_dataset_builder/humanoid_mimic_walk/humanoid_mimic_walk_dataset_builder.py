@@ -9,9 +9,9 @@ import tensorflow_hub as hub
 class HumanoidMimicWalk(tfds.core.GeneratorBasedBuilder):
     """DatasetBuilder for example dataset."""
 
-    VERSION = tfds.core.Version('1.0.0')
+    VERSION = tfds.core.Version('1.0.1')
     RELEASE_NOTES = {
-      '1.0.0': 'Initial release.',
+      '1.0.2': 'Mini Data // Obs (1,49) dimension (from (1,434) data).',
     }
 
     def __init__(self, *args, **kwargs):
@@ -43,7 +43,7 @@ class HumanoidMimicWalk(tfds.core.GeneratorBasedBuilder):
                         #         '2x gripper position, 1x door opening angle].',
                         # )
                         'obs': tfds.features.Tensor(
-                            shape=(1,434),
+                            shape=(1, 49),
                             dtype=np.float32,
                             doc='Robot state.',
                         ),
@@ -114,7 +114,7 @@ class HumanoidMimicWalk(tfds.core.GeneratorBasedBuilder):
                 episode.append({
                     'observation': {
                         'image': step['image'],
-                        'obs': step['obs'],
+                        'obs': step['obs'][:, :49],
                         # 'wrist_image': step['wrist_image'],
                         # 'state': step['state'],
                     },
