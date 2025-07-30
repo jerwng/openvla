@@ -9,9 +9,9 @@ import tensorflow_hub as hub
 class HumanoidMimicWalk(tfds.core.GeneratorBasedBuilder):
     """DatasetBuilder for example dataset."""
 
-    VERSION = tfds.core.Version('1.0.1')
+    VERSION = tfds.core.Version('1.0.3')
     RELEASE_NOTES = {
-      '1.0.2': 'Mini Data // Obs (1,49) dimension (from (1,434) data).',
+      '1.0.3': 'Mini Data // Obs+Image before Action, (49,) Obs and (19,) Action',
     }
 
     def __init__(self, *args, **kwargs):
@@ -43,13 +43,13 @@ class HumanoidMimicWalk(tfds.core.GeneratorBasedBuilder):
                         #         '2x gripper position, 1x door opening angle].',
                         # )
                         'obs': tfds.features.Tensor(
-                            shape=(1, 49),
+                            shape=(49,),
                             dtype=np.float32,
                             doc='Robot state.',
                         ),
                     }),
                     'action': tfds.features.Tensor(
-                        shape=(1,19),
+                        shape=(19,),
                         dtype=np.float32,
                         doc='Robot action, consists of [7x joint velocities, '
                             '2x gripper velocities, 1x terminate episode].',
@@ -94,8 +94,8 @@ class HumanoidMimicWalk(tfds.core.GeneratorBasedBuilder):
     def _split_generators(self, dl_manager: tfds.download.DownloadManager):
         """Define data splits."""
         return {
-            'train': self._generate_examples(path='data/train/ep_*.npy'),
-            'val': self._generate_examples(path='data/val/ep_*.npy'),
+            'train': self._generate_examples(path='data_mini/train_0730/ep_*.npy'),
+            'val': self._generate_examples(path='data_mini/val_0730/ep_*.npy'),
         }
 
     def _generate_examples(self, path) -> Iterator[Tuple[str, Any]]:
@@ -114,11 +114,11 @@ class HumanoidMimicWalk(tfds.core.GeneratorBasedBuilder):
                 episode.append({
                     'observation': {
                         'image': step['image'],
-                        'obs': step['obs'][:, :49],
+                        'obs': step['obs'][:, :49].reshape(-1),
                         # 'wrist_image': step['wrist_image'],
                         # 'state': step['state'],
                     },
-                    'action': step['action'],
+                    'action': step['action'].reshape(-1),
                     'discount': 1.0,
                     'reward': float(i == (len(data) - 1)),
                     'is_first': i == 0,
