@@ -26,6 +26,15 @@ from prismatic.vla.datasets.rlds.utils.data_utils import NormalizationType
 # HuggingFace Default / LLaMa-2 IGNORE_INDEX (for labels)
 IGNORE_INDEX = -100
 
+def stringify_obs(arr):
+    return np.array2string(
+        arr,
+        separator=',',
+        precision=8,
+        suppress_small=True,
+        floatmode='unique',
+        max_line_width=np.inf
+    ).replace(' ', '')
 
 @dataclass
 class RLDSBatchTransform:
@@ -36,11 +45,12 @@ class RLDSBatchTransform:
     predict_stop_token: bool = True
 
     def __call__(self, rlds_batch: Dict[str, Any]) -> Dict[str, Any]:
+        
         """Converts a RLDS batch to the format expected by the OpenVLA collator/models."""
         dataset_name, action = rlds_batch["dataset_name"], rlds_batch["action"][0]
         img = Image.fromarray(rlds_batch["observation"]["image_primary"][0])
         lang = rlds_batch["task"]["language_instruction"].decode().lower()
-        obs = np.squeeze(rlds_batch['observation']['proprio'])
+        obs = stringify_obs(np.squeeze(rlds_batch['observation']['proprio']))
 
         # Construct Chat-based Prompt =>> Input is default query + language instruction, output are the action tokens
         prompt_builder = self.prompt_builder_fn("openvla")
