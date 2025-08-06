@@ -9,9 +9,9 @@ import tensorflow_hub as hub
 class HumanoidMimicWalk(tfds.core.GeneratorBasedBuilder):
     """DatasetBuilder for example dataset."""
 
-    VERSION = tfds.core.Version('1.0.4')
+    VERSION = tfds.core.Version('1.0.5')
     RELEASE_NOTES = {
-      '1.0.4': '0730 Data 1000ep 1000s',
+      '1.0.5': '0805 Data 1000 episodes, 1000 steps. Fixed rng seeding.',
     }
 
     def __init__(self, *args, **kwargs):
@@ -94,8 +94,8 @@ class HumanoidMimicWalk(tfds.core.GeneratorBasedBuilder):
     def _split_generators(self, dl_manager: tfds.download.DownloadManager):
         """Define data splits."""
         return {
-            'train': self._generate_examples(path='data/train_0730/ep_*.npy'),
-            'val': self._generate_examples(path='data/val_0730/ep_*.npy'),
+            'train': self._generate_examples(path='data/train_0805/ep_*.npy'),
+            'val': self._generate_examples(path='data/val_0805/ep_*.npy'),
         }
 
     def _generate_examples(self, path) -> Iterator[Tuple[str, Any]]:
