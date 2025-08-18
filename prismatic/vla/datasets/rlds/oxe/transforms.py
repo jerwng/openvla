@@ -849,6 +849,15 @@ def humanoid_mimic_walk_dataset_transform(trajectory: dict) -> dict:
     return trajectory
 
 
+def walker2d_dataset_transform(trajectory: dict) -> dict:
+    """
+    Standardizes walker2d trajectories.
+    Assumes each step has keys: 'image', 'obs', 'action', 'language_instruction'.
+    """
+    # If your data is already in the correct format, you may just need to pass it through:
+    return trajectory
+
+
 # === Registry ===
 OXE_STANDARDIZATION_TRANSFORMS = {
     "bridge_oxe": bridge_oxe_dataset_transform,
@@ -928,5 +937,7 @@ OXE_STANDARDIZATION_TRANSFORMS = {
     "libero_goal_no_noops": libero_dataset_transform,
     "libero_10_no_noops": libero_dataset_transform,
     ### Humanoid Mimic Walk dataset
-    "humanoid_mimic_walk": humanoid_mimic_walk_dataset_transform
+    "humanoid_mimic_walk": humanoid_mimic_walk_dataset_transform,
+    ### Walker2D dataset
+    "walker2d": walker2d_dataset_transform
 }

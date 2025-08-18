@@ -210,6 +210,19 @@ class Exp_DinoSigLIP_224px_Humanoid_Mimic_Walk(Exp_SigLIP_224px_Bridge):
     global_batch_size: int = 128
     per_device_batch_size: int = 32
 
+# === [8 GPU] SigLIP 224px + Walker2D ===
+@dataclass
+class Exp_DinoSigLIP_224px_Walker2D(Exp_SigLIP_224px_Bridge):
+    vla_id: str = "prism-dinosiglip-224px+walker2d"
+    base_vlm: Union[str, Path] = "prism-dinosiglip-224px+7b"
+
+    data_mix: str = "walker2d"
+
+    # Temporary
+    expected_world_size: int = 4
+    global_batch_size: int = 128
+    per_device_batch_size: int = 32
+
 
 # === Define a VLA Registry Enum for Reference & Validation ===
 @unique
@@ -240,6 +253,9 @@ class VLARegistry(Enum):
 
     # === Humanoid Mimic Walk ===
     DINOSIGLIP_224PX_MX_HUMANOID_MIMIC_WALK = Exp_DinoSigLIP_224px_Humanoid_Mimic_Walk
+
+    # === Walker2D ===
+    DINOSIGLIP_224PX_MX_WALKER2D = Exp_DinoSigLIP_224px_Walker2D
 
     @property
     def vla_id(self) -> str:
