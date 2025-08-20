@@ -58,6 +58,8 @@ class PrismaticVLM(VLM):
 
         # Initialize Projection (Adapter) based on `arch_specifier`
         self.arch_specifier = arch_specifier
+
+        # NOTE: vision backbone embed dim: 2176 (1024 dino + 1152 siglip), llm backbone embed dim: 4096
         if arch_specifier == "linear":
             self.projector = LinearProjector(vision_backbone.embed_dim, llm_backbone.embed_dim)
         elif arch_specifier.endswith("fused-gelu-mlp"):
@@ -359,6 +361,8 @@ class PrismaticVLM(VLM):
 
         # Handle Multimodal Indices is None --> pretend like the batch is fully multimodal (always image + text)!
         if multimodal_indices is None:
+            # NOTE: len(input_ids) matches the per device batch size for the VLA (vla.py)
+            #       It is not the length of an input! (from datasets.py)
             multimodal_indices = torch.arange(len(input_ids), dtype=torch.long, device=input_ids.device)
 
         # Handle Multimodal Indices is Empty (len == 0) --> simple unimodal forward
@@ -379,12 +383,15 @@ class PrismaticVLM(VLM):
         # Run Visual Feature Extraction
         with torch.set_grad_enabled(self.vision_backbone_requires_grad):
             if isinstance(pixel_values, dict):
+                # NOTE: patch_features shape is [bsz, num_patches, patch_embed_dim], [32, 256, 2176]
                 patch_features = self.vision_backbone({k: pixel_values[k][multimodal_indices] for k in pixel_values})
             else:
                 patch_features = self.vision_backbone(pixel_values[multimodal_indices])
 
         # Projection Logic :: [bsz, num_patches, llm_embed_dim] =>> num_patches = (2 *) (256 + 1) for ViT-L + CLS
+        # NOTE: projected_patch_embeddings shape is [bsz, num_patches, llm_embed_dim], [32, 256, 4096]
         projected_patch_embeddings = self.projector(patch_features)
+
         projected_patch_attention_mask = None
         if attention_mask is not None:
             projected_patch_attention_mask = torch.full(
@@ -400,6 +407,8 @@ class PrismaticVLM(VLM):
         projected_obs_embeddings = self.obs_projector(obs)
 
         # Build Multimodal Embeddings (and build resulting attention mask)
+        # NOTE: Split the input_embeddings by[multimodal_indices, :1, :] to get the "start" token
+        #.      Then concat the image and obs embeddings, followed by the text embeddings
         multimodal_embeddings = torch.cat(
             [
                 input_embeddings[multimodal_indices, :1, :],
@@ -484,6 +493,8 @@ class PrismaticVLM(VLM):
             unimodal_labels = torch.cat([labels[unimodal_indices], unimodal_labels_pad], dim=1)
 
             # Create "Fused" Tensors by Stacking Multimodal & Unimodal
+            # NOTE: fused embedding concatenates Multimodal 
+            #       [BS, text input seq len + image num_patches + obs , llm embed] and Unimodal
             fused_embeddings = torch.vstack([multimodal_embeddings, unimodal_embeddings])
             fused_attention_mask = torch.vstack([multimodal_attention_mask, unimodal_attention_mask])
             fused_labels = torch.vstack([multimodal_labels, unimodal_labels])

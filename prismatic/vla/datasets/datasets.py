@@ -71,6 +71,7 @@ class RLDSBatchTransform:
 
         obs = torch.tensor(obs)
 
+        # NOTE: Transforms img to a dictionary of torch tensors with shape (3, 224, 224) for each vision model (dino, siglip) 
         pixel_values = self.image_transform(img)
 
         # [CRITICAL] We do not want to take the loss for anything but the predicted action tokens!
