@@ -66,6 +66,9 @@ class PrismaticVLM(VLM):
             self.projector = MLPProjector(vision_backbone.embed_dim, llm_backbone.embed_dim)
         else:
             raise ValueError(f"PrismaticVLM with `{arch_specifier = }` is not supported!")
+        
+        # TODO: Remove hard coding
+        self.obs_projector = MLPProjector(49, llm_backbone.embed_dim)
 
         # Trackers
         self.vision_backbone_requires_grad = False
@@ -140,6 +143,7 @@ class PrismaticVLM(VLM):
             self.vision_backbone.requires_grad_(False)
             self.llm_backbone.requires_grad_(False)
             self.projector.requires_grad_(True)
+            self.obs_projector.requires_grad_(True)
 
             # Add to `self.trainable_module_keys`
             self.trainable_module_keys = ["projector"]
@@ -156,6 +160,7 @@ class PrismaticVLM(VLM):
             self.vision_backbone.requires_grad_(False)
             self.llm_backbone.requires_grad_(True)
             self.projector.requires_grad_(True)
+            self.obs_projector.requires_grad_(True)
 
             # Add to `self.trainable_module_keys`
             self.trainable_module_keys = ["projector", "llm_backbone"]
@@ -173,6 +178,7 @@ class PrismaticVLM(VLM):
             self.vision_backbone.requires_grad_(True)
             self.llm_backbone.requires_grad_(True)
             self.projector.requires_grad_(True)
+            self.obs_projector.requires_grad_(True)
 
             # Add to `self.trainable_module_keys`
             self.trainable_module_keys = ["vision_backbone", "projector", "llm_backbone"]
@@ -189,6 +195,7 @@ class PrismaticVLM(VLM):
             self.vision_backbone.requires_grad_(False)
             self.projector.requires_grad_(False)
             self.llm_backbone.requires_grad_(False)
+            self.obs_projector.requires_grad_(False)
 
             # Unfreeze final LLM layer
             for module in self.llm_backbone.last_layer_finetune_modules:
@@ -212,6 +219,7 @@ class PrismaticVLM(VLM):
             self.vision_backbone.requires_grad_(True)
             self.projector.requires_grad_(True)
             self.llm_backbone.requires_grad_(False)
+            self.obs_projector.requires_grad_(True)
 
             # Unfreeze final LLM layer
             for module in self.llm_backbone.last_layer_finetune_modules:
@@ -264,6 +272,7 @@ class PrismaticVLM(VLM):
             overwatch.info(f"Loading from Provided Checkpoint `{pretrained_checkpoint}`", ctx_level=1)
             model_state_dict = torch.load(pretrained_checkpoint)["model"]
             self.projector.load_state_dict(model_state_dict["projector"])
+            self.obs_projector.load_state_dict(model_state_dict["obs_projector"])
 
             return
 
@@ -279,6 +288,8 @@ class PrismaticVLM(VLM):
             overwatch.info(f"Loading from Discovered Checkpoint `{pretrained_checkpoint}`", ctx_level=1)
             model_state_dict = torch.load(pretrained_checkpoint)["model"]
             self.projector.load_state_dict(model_state_dict["projector"])
+            self.obs_projector.load_state_dict(model_state_dict["obs_projector"])
+
         else:
             raise ValueError(f"Could not find valid `align` checkpoint at {pretrained_checkpoint}!")
 
@@ -314,6 +325,7 @@ class PrismaticVLM(VLM):
         input_ids: Optional[torch.LongTensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
         pixel_values: Optional[torch.FloatTensor] = None,
+        obs: Optional[torch.FloatTensor] = None,
         labels: Optional[torch.LongTensor] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
         past_key_values: Optional[List[torch.FloatTensor]] = None,
@@ -385,11 +397,14 @@ class PrismaticVLM(VLM):
         # Get Input Embeddings from LLM Backbone :: [bsz, input_seq_len, llm_embed_dim]
         input_embeddings = self.llm_backbone.embed_input_ids(input_ids)
 
+        projected_obs_embeddings = self.obs_projector(obs)
+
         # Build Multimodal Embeddings (and build resulting attention mask)
         multimodal_embeddings = torch.cat(
             [
                 input_embeddings[multimodal_indices, :1, :],
                 projected_patch_embeddings,
+                projected_obs_embeddings,
                 input_embeddings[multimodal_indices, 1:, :],
             ],
             dim=1,
@@ -415,8 +430,15 @@ class PrismaticVLM(VLM):
                 dtype=labels.dtype,
                 device=labels.device,
             )
+
+            projected_obs_labels = torch.full(
+                (projected_obs_embeddings.shape[0], projected_obs_embeddings.shape[1]),
+                IGNORE_INDEX,
+                dtype=labels.dtype,
+                device=labels.device,
+            )
             multimodal_labels = torch.cat(
-                [labels[multimodal_indices, :1], projected_patch_labels, labels[multimodal_indices, 1:]], dim=1
+                [labels[multimodal_indices, :1], projected_patch_labels, projected_obs_labels, labels[multimodal_indices, 1:]], dim=1
             )
 
         # === Add Unimodal Handling ===

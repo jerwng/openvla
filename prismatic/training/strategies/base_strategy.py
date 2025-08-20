@@ -292,6 +292,7 @@ class TrainingStrategy(ABC):
                         input_ids=batch["input_ids"],
                         attention_mask=batch["attention_mask"],
                         pixel_values=batch["pixel_values"],
+                        obs=batch["obs"],
                         labels=batch["labels"],
                     )
                     loss = output.loss
@@ -311,7 +312,11 @@ class TrainingStrategy(ABC):
                 #   2) Compute boolean "mask" where "labels > 2" (where 2 is ID for `EOS_TOKEN`)
                 #           => If masking out EOS, then it's just "labels != -100 (IGNORE_INDEX)
                 #   3) Compute masked accuracy as `(preds == logits) & mask` --> sum/divide by # unmasked!
-                action_preds = output.logits[:, self.vlm.vision_backbone.num_patches : -1].argmax(dim=2)
+
+                # NOTE: Slices output logits to remove the vision + obs tokens, only keep the action tokens
+                #       Should have same shape as action_preds and action_gt
+                # TODO: Replace + 1 after num_patches with number of obs tokens 
+                action_preds = output.logits[:, self.vlm.vision_backbone.num_patches + 1 : -1].argmax(dim=2)
                 action_gt = batch["labels"][:, 1:].to(action_preds.device)
                 mask = action_gt > action_tokenizer.action_token_begin_idx
 

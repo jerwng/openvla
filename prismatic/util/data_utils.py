@@ -101,6 +101,7 @@ class PaddedCollatorForActionPrediction:
     def __call__(self, instances: Sequence[Dict[str, torch.Tensor]]) -> Dict[str, torch.Tensor]:
         input_ids, labels = tuple([instance[key] for instance in instances] for key in ("input_ids", "labels"))
         pixel_values = [instance["pixel_values"] for instance in instances]
+        obs = [instance["obs"] for instance in instances]
         if "dataset_name" in instances[0]:
             dataset_names = [instance["dataset_name"] for instance in instances]
         else:
@@ -130,9 +131,14 @@ class PaddedCollatorForActionPrediction:
             }
         else:
             raise ValueError(f"Unsupported `pixel_values` type = {type(pixel_values)}")
+    
+        # NOTE: Originally, obs is a list of BS tensors with shape (1, obs dim)
+        #       Transform obs into a tensor of shape (BS, 1, obs dim)
+        obs = torch.stack(obs, dim=0)
 
         output = dict(
             pixel_values=pixel_values,
+            obs=obs,
             input_ids=input_ids,
             attention_mask=attention_mask,
             labels=labels,
