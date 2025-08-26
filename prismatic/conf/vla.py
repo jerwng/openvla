@@ -206,8 +206,8 @@ class Exp_DinoSigLIP_224px_Humanoid_Mimic_Walk(Exp_SigLIP_224px_Bridge):
     data_mix: str = "humanoid_mimic_walk"
 
     # Temporary
-    expected_world_size: int = 4
-    global_batch_size: int = 128
+    expected_world_size: int = 8
+    global_batch_size: int = 256
     per_device_batch_size: int = 32
 
 # === [8 GPU] SigLIP 224px + Walker2D ===
@@ -219,8 +219,8 @@ class Exp_DinoSigLIP_224px_Walker2D(Exp_SigLIP_224px_Bridge):
     data_mix: str = "walker2d"
 
     # Temporary
-    expected_world_size: int = 4
-    global_batch_size: int = 128
+    expected_world_size: int = 8
+    global_batch_size: int = 256
     per_device_batch_size: int = 32
 
 
