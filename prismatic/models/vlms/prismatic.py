@@ -76,7 +76,7 @@ class PrismaticVLM(VLM):
         self.vision_backbone_requires_grad = False
 
         # Set Module Keys =>> used in Checkpoint Saving / Model Loading
-        self.all_module_keys = ["vision_backbone", "llm_backbone", "projector"]
+        self.all_module_keys = ["vision_backbone", "llm_backbone", "projector", "obs_projector"]
         self.trainable_module_keys = []
 
         # === Generation Utilities ===
@@ -148,7 +148,7 @@ class PrismaticVLM(VLM):
             self.obs_projector.requires_grad_(True)
 
             # Add to `self.trainable_module_keys`
-            self.trainable_module_keys = ["projector"]
+            self.trainable_module_keys = ["projector", "obs_projector"]
 
             # Update Trackers
             self.vision_backbone_requires_grad = False
@@ -156,7 +156,7 @@ class PrismaticVLM(VLM):
             # Explicitly Log Frozen / Trainable Components
             overwatch.info(f"[Frozen]    🥶 =>> Vision Backbone `{self.vision_backbone.identifier}`", ctx_level=1)
             overwatch.info(f"[Frozen]    🥶 =>> LLM Backbone `{self.llm_backbone.identifier}`", ctx_level=1)
-            overwatch.info(f"[TRAINABLE] 🔥 =>> Projector `{self.arch_specifier}`", ctx_level=1)
+            overwatch.info(f"[TRAINABLE] 🔥 =>> Projector + Obs Projector `{self.arch_specifier}`", ctx_level=1)
 
         elif stage in {"finetune", "vla-train"}:
             self.vision_backbone.requires_grad_(False)
@@ -165,7 +165,7 @@ class PrismaticVLM(VLM):
             self.obs_projector.requires_grad_(True)
 
             # Add to `self.trainable_module_keys`
-            self.trainable_module_keys = ["projector", "llm_backbone"]
+            self.trainable_module_keys = ["projector", "obs_projector", "llm_backbone"]
 
             # Update Trackers
             self.vision_backbone_requires_grad = False
@@ -173,7 +173,7 @@ class PrismaticVLM(VLM):
             # Explicitly Log Frozen / Unfrozen Components
             overwatch.info(f"[Frozen]    🥶 =>> Vision Backbone `{self.vision_backbone.identifier}`", ctx_level=1)
             overwatch.info(f"[TRAINABLE] 🔥 =>> LLM Backbone `{self.llm_backbone.identifier}`", ctx_level=1)
-            overwatch.info(f"[TRAINABLE] 🔥 =>> Projector `{self.arch_specifier}`", ctx_level=1)
+            overwatch.info(f"[TRAINABLE] 🔥 =>> Projector + Obs Projector `{self.arch_specifier}`", ctx_level=1)
 
         elif stage in {"full-finetune", "vla-full-train"}:
             self.vision_backbone.dtype = torch.float32
@@ -183,7 +183,7 @@ class PrismaticVLM(VLM):
             self.obs_projector.requires_grad_(True)
 
             # Add to `self.trainable_module_keys`
-            self.trainable_module_keys = ["vision_backbone", "projector", "llm_backbone"]
+            self.trainable_module_keys = ["vision_backbone", "projector", "obs_projector", "llm_backbone"]
 
             # Update Trackers
             self.vision_backbone_requires_grad = True
@@ -191,7 +191,7 @@ class PrismaticVLM(VLM):
             # Explicitly Log Frozen / Unfrozen Components
             overwatch.info(f"[TRAINABLE] 🔥 =>> Vision Backbone `{self.vision_backbone.identifier}`", ctx_level=1)
             overwatch.info(f"[TRAINABLE] 🔥 =>> LLM Backbone `{self.llm_backbone.identifier}`", ctx_level=1)
-            overwatch.info(f"[TRAINABLE] 🔥 =>> Projector `{self.arch_specifier}`", ctx_level=1)
+            overwatch.info(f"[TRAINABLE] 🔥 =>> Projector + Obs Projector `{self.arch_specifier}`", ctx_level=1)
 
         elif stage in {"last-layer-finetune", "vla-last-layer-train"}:
             self.vision_backbone.requires_grad_(False)
@@ -213,7 +213,7 @@ class PrismaticVLM(VLM):
             # fmt: off
             overwatch.info(f"[Frozen]                    🥶   =>> Vision Backbone `{self.vision_backbone.identifier}`", ctx_level=1)  # noqa: E501
             overwatch.info(f"[Frozen, except last layer] 🥶🔥 =>> LLM Backbone `{self.llm_backbone.identifier}`", ctx_level=1)  # noqa: E501
-            overwatch.info(f"[Frozen]                    🥶   =>> Projector `{self.arch_specifier}`", ctx_level=1)
+            overwatch.info(f"[Frozen]                    🥶   =>> Projector + Obs Projector `{self.arch_specifier}`", ctx_level=1)
             # fmt: on
 
         elif stage in {"vla-sandwich-train"}:
@@ -228,7 +228,7 @@ class PrismaticVLM(VLM):
                 module.requires_grad_(True)
 
             # Add to `self.trainable_module_keys`
-            self.trainable_module_keys = ["vision_backbone", "projector", "llm_backbone"]
+            self.trainable_module_keys = ["vision_backbone", "projector", "obs_projector", "llm_backbone"]
 
             # Update Trackers
             self.vision_backbone_requires_grad = True
@@ -237,7 +237,7 @@ class PrismaticVLM(VLM):
             # fmt: off
             overwatch.info(f"[TRAINABLE]                 🔥   =>> Vision Backbone `{self.vision_backbone.identifier}`", ctx_level=1)  # noqa: E501
             overwatch.info(f"[Frozen, except last layer] 🥶🔥 =>> LLM Backbone `{self.llm_backbone.identifier}`", ctx_level=1)  # noqa: E501
-            overwatch.info(f"[TRAINABLE]                 🔥   =>> Projector `{self.arch_specifier}`", ctx_level=1)
+            overwatch.info(f"[TRAINABLE]                 🔥   =>> Projector + Obs Projector `{self.arch_specifier}`", ctx_level=1)
             # fmt: on
 
         else:
