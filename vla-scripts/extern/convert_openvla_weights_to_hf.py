@@ -81,10 +81,19 @@ PROJECTOR_KEY_MAPPING = {
     "projector.4.bias": "projector.fc3.bias",
 }
 
+OBS_PROJECTOR_KEY_MAPPING = {
+    "projector.0.weight": "obs_projector.fc1.weight",
+    "projector.0.bias": "obs_projector.fc1.bias",
+    "projector.2.weight": "obs_projector.fc2.weight",
+    "projector.2.bias": "obs_projector.fc2.bias",
+    "projector.4.weight": "obs_projector.fc3.weight",
+    "projector.4.bias": "obs_projector.fc3.bias",
+}
 
 def remap_state_dicts_for_hf(
     prismatic_vision_backbone_state_dict: Dict[str, torch.Tensor],
     projector_state_dict: Dict[str, torch.Tensor],
+    obs_projector_state_dict: Dict[str, torch.Tensor],
     llm_backbone_state_dict: Dict[str, torch.Tensor],
     use_fused_vision_backbone: bool = False,
 ) -> Dict[str, torch.Tensor]:
@@ -94,6 +103,10 @@ def remap_state_dicts_for_hf(
     # Iterate through Projector =>> use `PROJECTOR_KEY_MAPPING`
     for key, value in projector_state_dict.items():
         hf_state_dict[PROJECTOR_KEY_MAPPING[key]] = value
+
+    # Iterate through Obs Projector =>> use `PROJECTOR_KEY_MAPPING`
+    for key, value in obs_projector_state_dict.items():
+        hf_state_dict[OBS_PROJECTOR_KEY_MAPPING[key]] = value
 
     # Iterate through LLM Backbone =>> replace `llm.` with `language_model.`
     for key, value in llm_backbone_state_dict.items():
@@ -223,13 +236,14 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
     print("[*] Loading Prismatic VLM State Dictionary from Checkpoint")
     model_state_dict = torch.load(checkpoint_pt, map_location="cpu")["model"]
     assert ("downsampler" not in model_state_dict) or (len(model_state_dict["downsampler"]) == 0), "Downsampler?"
-    assert all([k in model_state_dict for k in ["vision_backbone", "projector", "llm_backbone"]]), "Missing keys!"
+    assert all([k in model_state_dict for k in ["vision_backbone", "projector", "obs_projector", "llm_backbone"]]), "Missing keys!"
 
     # Convert
     print("[*] Running Conversion")
     converted_state_dict = remap_state_dicts_for_hf(
         model_state_dict["vision_backbone"],
         model_state_dict["projector"],
+        model_state_dict["obs_projector"],
         model_state_dict["llm_backbone"],
         use_fused_vision_backbone=hf_config.use_fused_vision_backbone,
     )

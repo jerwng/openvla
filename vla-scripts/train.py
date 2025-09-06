@@ -42,8 +42,6 @@ os.environ['TFDS_DATASETS'] = '~/openvla/rlds_dataset_builder'
 # Sane Defaults
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-import rlds_dataset_builder.humanoid_mimic_walk.humanoid_mimic_walk_dataset_builder # TODO: Fix this path
-import rlds_dataset_builder.walker2d.walker2d_dataset_builder # TODO: Fix this path
 
 # Initialize Overwatch =>> Wraps `logging.Logger`
 overwatch = initialize_overwatch(__name__)

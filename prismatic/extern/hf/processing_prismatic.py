@@ -188,6 +188,7 @@ class PrismaticProcessor(ProcessorMixin):
         self,
         text: Union[TextInput, PreTokenizedInput, List[TextInput], List[PreTokenizedInput]],
         images: Union[Image.Image, List[Image.Image]],
+        obs: Optional[Union[torch.Tensor, List[float], Any]] = None,
         padding: Union[bool, str, PaddingStrategy] = False,
         truncation: Optional[Union[bool, str, TruncationStrategy]] = None,
         max_length: Optional[int] = None,
@@ -212,8 +213,8 @@ class PrismaticProcessor(ProcessorMixin):
         # [Validate] Need same number of images and text inputs!
         if pixel_values.shape[0] != text_inputs.input_ids.shape[0]:
             raise ValueError("Batch is malformed; expected same number of images and text inputs!")
-
-        return BatchFeature(data={**text_inputs, "pixel_values": pixel_values})
+    
+        return BatchFeature(data={**text_inputs, "pixel_values": pixel_values, "obs": obs})
 
     # === Tokenizer Dispatch Utilities =>> check `PreTrainedTokenizerBase` for documentation ===
     def batch_decode(

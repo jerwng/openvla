@@ -404,6 +404,8 @@ class PrismaticVLM(VLM):
         # Get Input Embeddings from LLM Backbone :: [bsz, input_seq_len, llm_embed_dim]
         input_embeddings = self.llm_backbone.embed_input_ids(input_ids)
 
+        # NOTE: obs shape: [BS, 1, Obs Dim], ex: [32, 1, 49]
+        # NOTE: projected_obs_embeddings shape: [BS, 1, LLM Dim], ex: [32, 1, 4096]
         projected_obs_embeddings = self.obs_projector(obs)
 
         # Build Multimodal Embeddings (and build resulting attention mask)
@@ -523,6 +525,7 @@ class PrismaticVLM(VLM):
         input_ids: Optional[torch.LongTensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
         pixel_values: Optional[torch.FloatTensor] = None,
+        obs: Optional[torch.FloatTensor] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
         past_key_values: Optional[List[torch.FloatTensor]] = None,
         use_cache: Optional[bool] = None,
@@ -543,6 +546,7 @@ class PrismaticVLM(VLM):
             {
                 "attention_mask": attention_mask,
                 "pixel_values": pixel_values,
+                "obs": obs,
                 "past_key_values": past_key_values,
                 "use_cache": use_cache,
             }

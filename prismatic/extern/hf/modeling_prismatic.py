@@ -244,6 +244,14 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel):
             llm_dim=config.text_config.hidden_size,
         )
 
+        # NOTE: Create a similar projector for the observation embeddings
+        # Create Multimodal Projector
+        self.obs_projector = PrismaticProjector(
+            False,
+            vision_dim=49,
+            llm_dim=config.text_config.hidden_size,
+        )
+
         # Instantiate LLM Backbone
         self.language_model = AutoModelForCausalLM.from_config(
             config.text_config, attn_implementation=config._attn_implementation
@@ -293,6 +301,7 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel):
         input_ids: Optional[torch.LongTensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
         pixel_values: Optional[torch.FloatTensor] = None,
+        obs: Optional[torch.FloatTensor] = None,
         labels: Optional[torch.LongTensor] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
         past_key_values: Optional[List[torch.FloatTensor]] = None,
@@ -315,6 +324,7 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel):
 
         # Instantiate Placeholder for Projector Features
         projected_patch_embeddings = None
+        projected_obs_embeddings = None
 
         # Note :: We only support forward passes with the following cases:
         #   => Cached Generation :: (input_ids.shape[1] == 1) and (past_key_values is not None)
@@ -379,9 +389,11 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel):
             # Get Input Embeddings (from Language Model Embeddings)
             input_embeddings = self.get_input_embeddings()(input_ids)
 
+            projected_obs_embeddings = self.obs_projector(obs)
+
             # Build Multimodal Embeddings & Attention Mask =>> Prismatic defaults to inserting after <BOS> token (1:)
             multimodal_embeddings = torch.cat(
-                [input_embeddings[:, :1, :], projected_patch_embeddings, input_embeddings[:, 1:, :]], dim=1
+                [input_embeddings[:, :1, :], projected_patch_embeddings, projected_obs_embeddings, input_embeddings[:, 1:, :]], dim=1
             )
             multimodal_attention_mask = None
             if attention_mask is not None:
@@ -398,7 +410,15 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel):
                     dtype=labels.dtype,
                     device=labels.device,
                 )
-                multimodal_labels = torch.cat([labels[:, :1], projected_patch_labels, labels[:, 1:]], dim=1)
+
+                projected_obs_labels = torch.full(
+                    (projected_obs_embeddings.shape[0], projected_obs_embeddings.shape[1]),
+                    IGNORE_INDEX,
+                    dtype=labels.dtype,
+                    device=labels.device,
+                )
+
+                multimodal_labels = torch.cat([labels[:, :1], projected_patch_labels, projected_obs_labels, labels[:, 1:]], dim=1)
 
             # Dispatch to Language Model
             language_model_output = self.language_model(
@@ -453,6 +473,7 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel):
         past_key_values: Optional[List[torch.FloatTensor]] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
         pixel_values: Optional[torch.FloatTensor] = None,
+        obs: Optional[torch.FloatTensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
         **kwargs: str,
     ) -> Dict[str, torch.Tensor]:
@@ -477,6 +498,7 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel):
             {
                 "attention_mask": attention_mask,
                 "pixel_values": pixel_values,
+                "obs": obs,
                 "past_key_values": past_key_values,
                 "use_cache": kwargs.get("use_cache"),
             }
