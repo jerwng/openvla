@@ -857,6 +857,14 @@ def walker2d_dataset_transform(trajectory: dict) -> dict:
     # If your data is already in the correct format, you may just need to pass it through:
     return trajectory
 
+def go2_rl_walk_dataset_transform(trajectory: dict) -> dict:
+    """
+    Standardizes go2_rl_walk trajectories.
+    Assumes each step has keys: 'image', 'obs', 'action', 'language_instruction'.
+    """
+    # If your data is already in the correct format, you may just need to pass it through:
+    return trajectory
+
 
 # === Registry ===
 OXE_STANDARDIZATION_TRANSFORMS = {
@@ -939,5 +947,6 @@ OXE_STANDARDIZATION_TRANSFORMS = {
     ### Humanoid Mimic Walk dataset
     "humanoid_mimic_walk": humanoid_mimic_walk_dataset_transform,
     ### Walker2D dataset
-    "walker2d": walker2d_dataset_transform
+    "walker2d": walker2d_dataset_transform,
+    "go2_rl_walk": go2_rl_walk_dataset_transform
 }

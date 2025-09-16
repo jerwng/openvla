@@ -39,6 +39,7 @@ class StateEncoding(IntEnum):
     JOINT_BIMANUAL = 4      # Joint Angles (2 x [ Joint Angles (6) + Gripper Open/Close (1) ])
     HUMANOID_JOINT = 5     # Humanoid Joint Position and Velocities
     WALKER_JOINT=6
+    GO2_QUADRUPED_JOINT = 7
     # fmt: on
 
 
@@ -51,6 +52,7 @@ class ActionEncoding(IntEnum):
     EEF_R6 = 4              # EEF Delta XYZ (3) + R6 (6) + Gripper Open/Close (1)
     HUMANOID_JOINT_DC = 5   # Torque of Humanoid Actuators
     WALKER_JOINT = 6
+    GO2_QUADRUPED_JOINT = 7
     # fmt: on
 
 
@@ -687,5 +689,12 @@ OXE_DATASET_CONFIGS = {
         "state_obs_keys": ["obs"],
         "state_encoding": StateEncoding.WALKER_JOINT,  
         "action_encoding": ActionEncoding.WALKER_JOINT,  
+    },
+    "go2_rl_walk": {
+        "image_obs_keys": {"primary": "image", "secondary": None, "wrist": None},
+        "depth_obs_keys": {"primary": None, "secondary": None, "wrist": None},
+        "state_obs_keys": ["obs"],
+        "state_encoding": StateEncoding.GO2_QUADRUPED_JOINT,  
+        "action_encoding": ActionEncoding.GO2_QUADRUPED_JOINT,  
     },
 }
